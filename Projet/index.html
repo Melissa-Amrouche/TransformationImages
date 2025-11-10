@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCRUM Project – Webservice d'Images</title>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+  <style>
+    body { background-color: #f5f5f5; }
+    header {
+      text-align: center;
+      background: white;
+      padding: 80px 20px 40px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .logo-header {
+      width: 180px;
+      transition: transform 0.2s linear;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    .slider-container {
+      text-align: center;
+      margin: 40px auto;
+    }
+    input[type=range] {
+      width: 300px;
+      accent-color: #2196F3;
+    }
+    .intro {
+      max-width: 900px;
+      margin: 50px auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="w3-top">
+  <div class="w3-bar w3-white w3-wide w3-padding w3-card">
+    <a href="index.html" class="w3-bar-item w3-button"><b>SCRUM</b> Project</a>
+    <div class="w3-right w3-hide-small">
+      <a href="index.html" class="w3-bar-item w3-button">Home</a>
+      <a href="#about" class="w3-bar-item w3-button">About</a>
+      <a href="upload.html" class="w3-bar-item w3-button">Upload</a>
+    </div>
+  </div>
+</div>
+
+<!-- Header sans image -->
+<header id="home">
+  <img id="logo" src="logo.png" alt="Logo SCRUM Project" class="logo-header">
+  <h1 class="w3-xxlarge w3-margin-top"><b>SCRUM Project</b></h1>
+  <p class="w3-text-grey">Webservice de transformation d’images</p>
+</header>
+
+<!-- Slider -->
+<div class="slider-container">
+  <label for="rotateSlider" class="w3-medium">Rotation du logo (0° → 180°)</label><br>
+  <input id="rotateSlider" type="range" min="0" max="180" value="0" step="1">
+</div>
+
+<!-- About Section -->
+<div class="w3-content w3-padding" style="max-width:1200px" id="about">
+  <h3 class="w3-border-bottom w3-border-light-grey w3-padding-16">À propos du Webservice</h3>
+  
+  <div class="intro">
+    <p>
+      Bienvenue sur notre <strong>webservice de transformation d’images</strong>.  
+      Ce projet, développé dans le cadre du TP <em>Processus de Développement Logiciel</em> sous méthodologie <strong>Scrum</strong>, 
+      permet d’appliquer différentes transformations simples sur vos images.
+    </p>
+
+    <ul class="w3-ul w3-border w3-round-large w3-white w3-margin-top">
+      <li>Conversion en noir & blanc / niveaux de gris</li>
+      <li>Rotation (90°, 180°, 270°)</li>
+      <li>Inversion horizontale / verticale</li>
+      <li>Redimensionnement</li>
+      <li>Encodage Base64</li>
+    </ul>
+
+    <p class="w3-margin-top">Cette page constitue la <strong>page d’accueil du Sprint 1</strong> et présente la base du projet.</p>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="w3-center w3-black w3-padding-16">
+  <p>Scrum team</p>
+</footer>
+
+<script>
+  const slider = document.getElementById('rotateSlider');
+  const logo = document.getElementById('logo');
+  slider.addEventListener('input', () => {
+    logo.style.transform = `rotate(${slider.value}deg)`;
+  });
+</script>
+
+</body>
+</html>
