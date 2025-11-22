@@ -19,50 +19,49 @@
         <div class="header">
             <nav>
                 <ul class="nav nav-pills pull-right">
-                    <li role="presentation" class="active btn"><a href="#">Home</a>
+                    <li role="presentation" class="active btn"><a href="#">Accueil</a>
                     </li>
-                    <li role="presentation" class="btn"><a href="https://github.com/gxercavins">gxercavins</a>
+                    <li role="presentation" class="btn"><a href="https://github.com/Melissa-Amrouche/TransformationImages">Git</a>
                     </li>
                 </ul>
             </nav>
-            <h3 class="text-muted">Python Flask Image Manipulation App</h3>
+            <h3 class="text-muted">Application de Manipulation d'Images</h3>
         </div>
  
         <div class="jumbotron">
-            <h1>Upload your image</h1>
+            <h1>Téléchargez votre image</h1>
             <p class="lead"></p>
 	       <form id="upload-form" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
             <input id="file-picker" type="file" name="file" accept="image/*" class="hidden" onchange="this.form.submit()">
-            <label for="file-picker" class="btn btn-lg btn-success">Select file</label>
+            <label for="file-picker" class="btn btn-lg btn-success">Sélectionner un fichier</label>
 		 </form>
         </div>
  
         <div class="row marketing">
             <div class="col-lg-6">
-                <h4>Flip</h4>
-                <p>Flip your uploaded image either horizontally or vertically.</p>
+                <h4>Retourner</h4>
+                <p>Retournez votre image téléchargée horizontalement ou verticalement.</p>
  
-                <h4>Crop</h4>
-                <p>Select your start and stop points and crop your image accordingly.</p> 
+                <h4>Rogner</h4>
+                <p>Sélectionnez vos points de début et de fin pour rogner votre image.</p> 
                 
             </div>
  
             <div class="col-lg-6">
-                <h4>Rotate</h4>
-                <p>Enter the angle (in degrees) to rotate your image clockwise.</p>
+                <h4>Pivoter</h4>
+                <p>Entrez l'angle (en degrés) pour faire pivoter votre image dans le sens horaire.</p>
  
-                <h4>Blend</h4>
-                <p>Blend with a stock photo, either in color or in black & white.</p>
+                <h4>Fusionner</h4>
+                <p>Fusionnez avec une image fournie, en couleur ou en noir et blanc.</p>
                 
             </div>
         </div>
  
         <footer class="footer">
-            <p>&copy; gxercavins 2017. Using Python, Flask and PIL.</p>
+            <p class="text-center">&copy; 2025. Transformation d'Images.</p>
         </footer>
  
     </div>
 </body>
  
 </html>
-
