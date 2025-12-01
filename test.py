@@ -10,8 +10,8 @@ class TestStringMethods(unittest.TestCase):
 
     # test flip function
     def test_flip(self):
-        print 'Test Flip function'
-        print '------------------------'
+        print ('Test Flip function')
+        print ('------------------------')
 
         r = [0, 0, 0]
 
@@ -23,8 +23,8 @@ class TestStringMethods(unittest.TestCase):
 
     # test rotate function
     def test_rotate(self):
-        print 'Test Rotate function'
-        print '------------------------'
+        print ('Test Rotate function')
+        print ('------------------------')
 
         r = [0, 0, 0]
 
@@ -36,8 +36,8 @@ class TestStringMethods(unittest.TestCase):
 
     # test crop function
     def test_crop(self):
-        print 'Test Crop function'
-        print '------------------------'
+        print ('Test Crop function')
+        print ('------------------------')
 
         r = [0, 0, 0]
 
@@ -49,8 +49,8 @@ class TestStringMethods(unittest.TestCase):
 
     # test blend function
     def test_blend(self):
-        print 'Test Blend function'
-        print '------------------------'
+        print ('Test Blend function')
+        print ('------------------------')
 
         r = [0, 0, 0]
 

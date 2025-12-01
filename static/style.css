@@ -29,3 +29,105 @@ div#image-container > img {
 .hidden {
 	display: none !important;
 }
+
+/* ========================================
+   ROTATION INTERACTIVE UI STYLES
+   ======================================== */
+
+/* Angle Slider Styling */
+.angle-slider {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #5cb85c, #f0ad4e, #d9534f);
+    border-radius: 5px;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+    margin: 10px 0;
+}
+
+.angle-slider:hover {
+    opacity: 1;
+}
+
+/* Slider thumb for Webkit browsers (Chrome, Safari) */
+.angle-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    border: 3px solid #667eea;
+}
+
+/* Slider thumb for Firefox */
+.angle-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    border: 3px solid #667eea;
+}
+
+/* Form Group Spacing */
+#form-rotate .form-group {
+    margin-bottom: 15px;
+}
+
+#form-rotate .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Number Input for Angle */
+#angleInput {
+    width: 100px;
+    padding: 8px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+#angleInput:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+}
+
+/* Quick Rotation Buttons */
+.quick-rotation-buttons {
+    margin: 15px 0;
+}
+
+.quick-rotation-buttons .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.quick-rotation-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Apply Rotation Button */
+#btnRotate {
+    margin-top: 15px;
+    width: 100%;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+#btnRotate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(92, 184, 92, 0.4);
+}

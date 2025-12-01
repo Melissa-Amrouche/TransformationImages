@@ -49,15 +49,21 @@ def upload():
 @app.route("/rotate", methods=["POST"])
 def rotate():
     # retrieve parameters from html form
-    angle = request.form['angle']
+    angle = int(request.form['angle'])
     filename = request.form['image']
+
+    # validate angle (0-360 degrees)
+    if not 0 <= angle <= 360:
+        return render_template("error.html", message="L'angle doit être entre 0 et 360 degrés"), 400
 
     # open and process image
     target = os.path.join(APP_ROOT, 'static/images')
     destination = "/".join([target, filename])
 
     img = Image.open(destination)
-    img = img.rotate(-1*int(angle))
+    # rotate counter-clockwise (negative for clockwise rotation in Pillow)
+    # expand=True ensures the entire rotated image is visible (no cropping)
+    img = img.rotate(-1 * angle, expand=True)
 
     # save and return image
     destination = "/".join([target, 'temp.png'])
