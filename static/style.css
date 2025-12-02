@@ -131,3 +131,122 @@ div#image-container > img {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(92, 184, 92, 0.4);
 }
+
+/* ========================================
+   IMAGE PREVIEW CONTAINER STYLES
+   ======================================== */
+
+.image-preview-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.original-image-box,
+.preview-image-box {
+    flex: 1;
+    min-width: 300px;
+    max-width: 450px;
+    min-height: 500px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.preview-image-box {
+    border-color: #5cb85c;
+    background: linear-gradient(to bottom, #f9f9f9, #f0f8f0);
+}
+
+.original-image-box h4,
+.preview-image-box h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: 2px solid #5cb85c;
+    padding-bottom: 10px;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+/* Image wrapper to contain rotated images */
+.original-image-box::after,
+.preview-image-box::after {
+    content: '';
+    flex: 1;
+}
+
+.original-image-box img,
+.preview-image-box img {
+    display: block;
+    margin: 0 auto;
+    max-width: 80%;
+    max-height: 350px;
+    width: auto;
+    height: auto;
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+#loading-spinner {
+    text-align: center;
+    margin-top: 15px;
+    color: #5cb85c;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+#loading-spinner i {
+    margin-right: 8px;
+}
+
+/* Download Button Styling */
+.download-button {
+    margin-top: 15px;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 12px;
+    transition: all 0.3s ease;
+    border: none;
+    background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.download-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(92, 184, 92, 0.5);
+    background: linear-gradient(135deg, #4cae4c 0%, #449d44 100%);
+}
+
+.download-button:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.download-button i {
+    margin-right: 8px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .image-preview-container {
+        flex-direction: column;
+    }
+
+    .original-image-box,
+    .preview-image-box {
+        max-width: 100%;
+    }
+}

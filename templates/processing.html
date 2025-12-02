@@ -31,8 +31,21 @@
         </div>
 
         <div class="jumbotron">
-            <div id="image-container">
-                <img src=" {{url_for('send_image', filename=image_name)}} " style="max-width: 560px;">
+            <div class="image-preview-container">
+                <div class="original-image-box">
+                    <h4>Image Originale</h4>
+                    <img id="original-image" src=" {{url_for('send_image', filename=image_name)}} " style="max-width: 100%;">
+                </div>
+                <div class="preview-image-box">
+                    <h4>Aperçu en temps réel</h4>
+                    <img id="preview-image" src=" {{url_for('send_image', filename=image_name)}} " style="max-width: 100%;">
+                    <div id="loading-spinner" class="hidden">
+                        <i class="fa fa-spinner fa-spin"></i> Traitement en cours...
+                    </div>
+                    <button id="download-btn" class="btn btn-success btn-block download-button">
+                        <i class="fa fa-download"></i> Télécharger l'image
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -45,7 +58,7 @@
                     <input type="text" class="hidden" name="image" value="{{ image_name }}">
                 </form>
 
-                <!-- FONCTIONNALITÉ ROGNER - CACHÉE
+              
                 <h4>Rogner</h4>
                 <form id="form-crop" action="{{ url_for('crop') }}" method="POST" enctype="multipart/form-data">
                     <input type="number" placeholder="x1" min="0" name="x1" required>
@@ -55,7 +68,7 @@
                     <button id="btnCrop" class="btn btn-lg btn-success" type="submit">Valider</button>
                     <input type="text" class="hidden" name="image" value="{{ image_name }}">
                 </form>
-                -->
+                
             </div>
 
             <div class="col-lg-6">
@@ -82,9 +95,10 @@
                         <button type="button" id="resetBtn" class="btn btn-sm btn-warning">Réinitialiser</button>
                     </div>
 
-                    <!-- Submit button -->
-                    <button id="btnRotate" class="btn btn-lg btn-success" type="submit">Appliquer la rotation</button>
                     <input type="text" class="hidden" name="image" value="{{ image_name }}">
+                    <p class="text-muted" style="margin-top: 10px; font-size: 12px;">
+                        <i class="fa fa-info-circle"></i> La rotation s'applique automatiquement en temps réel
+                    </p>
                 </form>
 
                 <!-- FONCTIONNALITÉ FUSIONNER - CACHÉE
@@ -100,7 +114,7 @@
         </div>
 
         <footer class="footer">
-            <p class="text-center">&copy; 2025. Transformation d'Images.</p>
+            <p class="text-center"> Transformation d'Images.</p>
         </footer>
 
     </div>
