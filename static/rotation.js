@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const angleSlider = document.getElementById('angleSlider');
     const angleInput = document.getElementById('angleInput');
+    const currentAngleDisplay = document.getElementById('current-angle-value');
     const resetBtn = document.getElementById('resetBtn');
     const rotate90Btn = document.getElementById('rotate90Btn');
     const rotate180Btn = document.getElementById('rotate180Btn');
@@ -22,22 +23,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let rotationTimeout = null;
     let currentAngle = 0;
+    let currentImageSrc = null; // Track the current working image (original or temp.png)
+    let hasTransformations = false; // Track if we have any transformations applied
+    let needsImageReload = false; // Track if we need to reload the base image
 
     // Calculate scale factor to fit rotated image in container
     function calculateScaleForRotation(angle) {
-        // Convert angle to radians
-        const radians = (angle * Math.PI) / 180;
-
-        // Calculate the scale factor needed to fit the rotated image
-        // Using the bounding box calculation
-        const absSin = Math.abs(Math.sin(radians));
-        const absCos = Math.abs(Math.cos(radians));
-
-        // Scale down if needed to fit in container
-        const scale = 1 / (absSin + absCos);
-
-        // Don't scale up, only scale down if needed
-        return Math.min(1, scale);
+        // No scaling - let the image rotate naturally
+        // The server handles expand=True for the final image
+        return 1;
     }
 
     // Central function to update all rotation controls and preview
@@ -50,11 +44,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update all controls
         angleSlider.value = angle;
         angleInput.value = angle;
+        currentAngleDisplay.textContent = angle;
+
+        // Only reload the base image if needed (after flip/crop or on first load)
+        if (needsImageReload) {
+            // Use the base image WITHOUT rotation
+            // If we have transformations (flip/crop), use temp_no_rotation.png, otherwise use original
+            const baseImage = hasTransformations ? '/static/images/temp_no_rotation.png' : originalImage.src;
+            previewImage.src = baseImage + '?t=' + new Date().getTime();
+            needsImageReload = false;
+        }
 
         // Calculate scale to keep image in bounds
         const scale = calculateScaleForRotation(angle);
 
-        // Apply CSS rotation and scale for instant visual feedback
+        // Apply CSS rotation for instant visual feedback
         previewImage.style.transform = `rotate(${angle}deg) scale(${scale})`;
 
         // Debounce server request for actual rotation
@@ -66,20 +70,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Apply rotation via AJAX without page reload
     function applyRotationToServer(angle) {
-        if (angle === 0) {
-            // Reset to original image
+        if (angle === 0 && !hasTransformations) {
+            // Reset to original image only if no other transformations
             previewImage.src = originalImage.src + '?t=' + new Date().getTime();
-            previewImage.style.transform = 'rotate(0deg)';
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
             return;
         }
 
         // Show loading spinner
         loadingSpinner.classList.remove('hidden');
 
+        // Determine which image to use as base
+        const baseImageName = hasTransformations ? 'temp.png' : imageName;
+
         // Create form data
         const formData = new FormData();
         formData.append('angle', angle);
-        formData.append('image', imageName);
+        formData.append('image', baseImageName);
+
+        // Remember the angle we're requesting
+        const requestedAngle = angle;
 
         // Send AJAX request
         fetch('/rotate', {
@@ -88,12 +98,16 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.blob())
         .then(blob => {
-            // Update preview image with rotated version
-            const imageUrl = URL.createObjectURL(blob);
-            previewImage.src = imageUrl;
-            // Keep the CSS rotation and scale to maintain the current angle display
-            const scale = calculateScaleForRotation(currentAngle);
-            previewImage.style.transform = `rotate(${currentAngle}deg) scale(${scale})`;
+            // Only update if this is still the current angle we want
+            if (requestedAngle === currentAngle) {
+                // Update preview image with rotated version from server
+                const imageUrl = URL.createObjectURL(blob);
+                previewImage.src = imageUrl;
+                // Remove CSS transform since the server has already rotated the image
+                previewImage.style.transform = 'rotate(0deg) scale(1)';
+                // Mark that we now have transformations
+                hasTransformations = true;
+            }
             loadingSpinner.classList.add('hidden');
         })
         .catch(error => {
@@ -107,9 +121,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyFlip(mode) {
         loadingSpinner.classList.remove('hidden');
 
+        // Use temp.png if we already have transformations, otherwise use original
+        const baseImageName = hasTransformations ? 'temp.png' : imageName;
+
         const formData = new FormData();
         formData.append('mode', mode);
-        formData.append('image', imageName);
+        formData.append('image', baseImageName);
 
         fetch('/flip', {
             method: 'POST',
@@ -119,11 +136,17 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(blob => {
             const imageUrl = URL.createObjectURL(blob);
             previewImage.src = imageUrl;
-            // Reset rotation after flip
+            // Reset CSS transform since the flip is now baked into the image
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            hasTransformations = true;
+            needsImageReload = true; // Mark that we need to reload base image for next rotation
+
+            // Reset rotation to 0 - flip creates a new base
             currentAngle = 0;
             angleSlider.value = 0;
             angleInput.value = 0;
-            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            currentAngleDisplay.textContent = 0;
+
             loadingSpinner.classList.add('hidden');
         })
         .catch(error => {
@@ -137,12 +160,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyCrop(x1, y1, x2, y2) {
         loadingSpinner.classList.remove('hidden');
 
+        // Use temp.png if we already have transformations, otherwise use original
+        const baseImageName = hasTransformations ? 'temp.png' : imageName;
+
         const formData = new FormData();
         formData.append('x1', x1);
         formData.append('y1', y1);
         formData.append('x2', x2);
         formData.append('y2', y2);
-        formData.append('image', imageName);
+        formData.append('image', baseImageName);
 
         fetch('/crop', {
             method: 'POST',
@@ -157,11 +183,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(blob => {
             const imageUrl = URL.createObjectURL(blob);
             previewImage.src = imageUrl;
-            // Reset rotation after crop
-            currentAngle = 0;
+            // Keep the current rotation angle - don't reset!
+            // The crop is applied to the current state
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            hasTransformations = true;
+            needsImageReload = true; // Mark that we need to reload base image for next rotation
+            currentAngle = 0; // Reset rotation after crop
             angleSlider.value = 0;
             angleInput.value = 0;
-            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            currentAngleDisplay.textContent = 0;
             loadingSpinner.classList.add('hidden');
         })
         .catch(error => {
@@ -199,10 +229,28 @@ document.addEventListener('DOMContentLoaded', function() {
         updateRotation(270);
     });
 
-    // Reset button
+    // Reset button - reset rotation to 0 degrees
     resetBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        updateRotation(0);
+
+        if (hasTransformations) {
+            // We have flip/crop, show temp_no_rotation.png (without rotation)
+            currentAngle = 0;
+            angleSlider.value = 0;
+            angleInput.value = 0;
+            currentAngleDisplay.textContent = 0;
+
+            previewImage.src = '/static/images/temp_no_rotation.png?t=' + new Date().getTime();
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+
+            // Clear any pending rotation
+            clearTimeout(rotationTimeout);
+            needsImageReload = false; // We just reloaded it
+        } else {
+            // No transformations, just update to 0
+            needsImageReload = true;
+            updateRotation(0);
+        }
     });
 
     // Prevent form submission for rotation (we handle it with AJAX)
@@ -279,6 +327,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Reset all transformations button
+    const resetAllBtn = document.getElementById('reset-all-btn');
+    resetAllBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        // Confirm reset
+        if (confirm('Voulez-vous vraiment réinitialiser toutes les transformations et revenir à l\'image originale ?')) {
+            // Reset to original image
+            previewImage.src = originalImage.src + '?t=' + new Date().getTime();
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+
+            // Reset all state variables
+            currentAngle = 0;
+            hasTransformations = false;
+            needsImageReload = false; // We just reloaded it
+
+            // Reset rotation controls
+            angleSlider.value = 0;
+            angleInput.value = 0;
+            currentAngleDisplay.textContent = 0;
+
+            // Clear any pending rotation timeout
+            clearTimeout(rotationTimeout);
+
+            alert('Toutes les transformations ont été réinitialisées !');
+        }
+    });
+
     // Initialize with default value (0 degrees)
+    needsImageReload = true; // First load needs the image
     updateRotation(0);
 });

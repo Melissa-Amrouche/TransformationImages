@@ -58,14 +58,24 @@ def rotate():
 
     # open and process image
     target = os.path.join(APP_ROOT, 'static/images')
-    destination = "/".join([target, filename])
+
+    # Check if we have a base image without rotation (after flip/crop)
+    # This allows rotation reset to work properly
+    base_no_rotation = "/".join([target, 'temp_no_rotation.png'])
+    if filename == 'temp.png' and os.path.isfile(base_no_rotation):
+        # Use the base image without rotation
+        destination = base_no_rotation
+    else:
+        # Use the specified filename
+        destination = "/".join([target, filename])
 
     img = Image.open(destination)
+
     # rotate counter-clockwise (negative for clockwise rotation in Pillow)
     # expand=True ensures the entire rotated image is visible (no cropping)
-    img = img.rotate(-1 * angle, expand=True)
+    img = img.rotate(-1 * angle, expand=True, fillcolor='white')
 
-    # save and return image
+    # save and return image (only temp.png, keep temp_no_rotation.png unchanged)
     destination = "/".join([target, 'temp.png'])
     if os.path.isfile(destination):
         os.remove(destination)
@@ -99,10 +109,17 @@ def flip():
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
 
     # save and return image
+    # Save as both temp.png and temp_no_rotation.png (base for future rotations)
     destination = "/".join([target, 'temp.png'])
+    destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+
     if os.path.isfile(destination):
         os.remove(destination)
+    if os.path.isfile(destination_no_rot):
+        os.remove(destination_no_rot)
+
     img.save(destination)
+    img.save(destination_no_rot)
 
     return send_image('temp.png')
 
@@ -144,12 +161,19 @@ def crop():
     # crop image and show
     if crop_possible:
         img = img.crop((x1, y1, x2, y2))
-        
+
         # save and return image
+        # Save as both temp.png and temp_no_rotation.png (base for future rotations)
         destination = "/".join([target, 'temp.png'])
+        destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+
         if os.path.isfile(destination):
             os.remove(destination)
+        if os.path.isfile(destination_no_rot):
+            os.remove(destination_no_rot)
+
         img.save(destination)
+        img.save(destination_no_rot)
         return send_image('temp.png')
     else:
         return render_template("error.html", message="Crop dimensions not valid"), 400

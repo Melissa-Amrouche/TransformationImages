@@ -42,9 +42,6 @@
                     <div id="loading-spinner" class="hidden">
                         <i class="fa fa-spinner fa-spin"></i> Traitement en cours...
                     </div>
-                    <button id="download-btn" class="btn btn-success btn-block download-button">
-                        <i class="fa fa-download"></i> Télécharger l'image
-                    </button>
                 </div>
             </div>
         </div>
@@ -85,6 +82,9 @@
                     <div class="form-group">
                         <label for="angleInput">Angle (degrés) :</label>
                         <input type="number" id="angleInput" name="angle" min="0" max="360" value="0" placeholder="0-360" required>
+                        <div id="angle-display" style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; font-weight: bold; text-align: center; color: #2e7d32;">
+                            Angle actuel : <span id="current-angle-value">0</span>°
+                        </div>
                     </div>
 
                     <!-- Quick rotation buttons -->
@@ -110,6 +110,18 @@
                 </form>
                 -->
 
+            </div>
+        </div>
+
+        <!-- Download and Reset Buttons Section -->
+        <div class="row" style="margin-top: 30px; margin-bottom: 30px;">
+            <div class="col-lg-12 text-center">
+                <button id="download-btn" class="btn btn-success btn-lg" style="padding: 15px 40px; font-size: 18px; margin-right: 15px;">
+                    <i class="fa fa-download"></i> Télécharger l'image transformée
+                </button>
+                <button id="reset-all-btn" class="btn btn-warning btn-lg" style="padding: 15px 40px; font-size: 18px;">
+                    <i class="fa fa-refresh"></i> Réinitialiser toutes les transformations
+                </button>
             </div>
         </div>
 
