@@ -62,10 +62,10 @@ document.addEventListener('DOMContentLoaded', function() {
         previewImage.style.transform = `rotate(${angle}deg) scale(${scale})`;
 
         // Debounce server request for actual rotation
-        clearTimeout(rotationTimeout);
-        rotationTimeout = setTimeout(function() {
-            applyRotationToServer(angle);
-        }, 500);
+       // clearTimeout(rotationTimeout);
+       // rotationTimeout = setTimeout(function() {
+        //    applyRotationToServer(angle);
+        //}, 500);
     }
 
     // Apply rotation via AJAX without page reload
