@@ -41,6 +41,25 @@ def upload():
     print("File saved to to:", destination)
     upload.save(destination)
 
+    # CRITICAL: Create temp_geometry.png immediately to preserve original colors
+    # This allows color conversions to work even without geometric transformations first
+    img = Image.open(destination)
+
+    # IMPORTANT: Ensure image is in RGB mode for consistent processing
+    if img.mode == 'RGBA':
+        # Create white background for transparency
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[3])  # Use alpha channel as mask
+        img = background
+    elif img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    temp_geometry = "/".join([target, 'temp_geometry.png'])
+    if os.path.isfile(temp_geometry):
+        os.remove(temp_geometry)
+    img.save(temp_geometry)
+    print("Created temp_geometry.png for color preservation")
+
     # forward to processing page
     return render_template("processing.html", image_name=filename)
 
@@ -109,17 +128,21 @@ def flip():
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
 
     # save and return image
-    # Save as both temp.png and temp_no_rotation.png (base for future rotations)
+    # Save as temp.png, temp_no_rotation.png, AND temp_geometry.png (for color conversions)
     destination = "/".join([target, 'temp.png'])
     destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+    destination_geometry = "/".join([target, 'temp_geometry.png'])
 
     if os.path.isfile(destination):
         os.remove(destination)
     if os.path.isfile(destination_no_rot):
         os.remove(destination_no_rot)
+    if os.path.isfile(destination_geometry):
+        os.remove(destination_geometry)
 
     img.save(destination)
     img.save(destination_no_rot)
+    img.save(destination_geometry)  # Update geometry base with flip
 
     return send_image('temp.png')
 
@@ -163,17 +186,21 @@ def crop():
         img = img.crop((x1, y1, x2, y2))
 
         # save and return image
-        # Save as both temp.png and temp_no_rotation.png (base for future rotations)
+        # Save as temp.png, temp_no_rotation.png, AND temp_geometry.png (for color conversions)
         destination = "/".join([target, 'temp.png'])
         destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+        destination_geometry = "/".join([target, 'temp_geometry.png'])
 
         if os.path.isfile(destination):
             os.remove(destination)
         if os.path.isfile(destination_no_rot):
             os.remove(destination_no_rot)
+        if os.path.isfile(destination_geometry):
+            os.remove(destination_geometry)
 
         img.save(destination)
         img.save(destination_no_rot)
+        img.save(destination_geometry)  # Update geometry base with crop
         return send_image('temp.png')
     else:
         return render_template("error.html", message="Crop dimensions not valid"), 400
@@ -220,6 +247,7 @@ def blend():
 
 
 # convert image to grayscale (256 shades of gray)
+# ALWAYS use temp_geometry.png as source (preserves original colors + geometric transformations)
 @app.route("/grayscale", methods=["POST"])
 def grayscale():
     # retrieve parameters from html form
@@ -227,13 +255,33 @@ def grayscale():
 
     # open and process image
     target = os.path.join(APP_ROOT, 'static/images')
-    destination = "/".join([target, filename])
+
+    # CRITICAL: Use temp_geometry.png if it exists (has original colors + geometric transforms)
+    # This ensures we can convert N&B → Gris or Gris → N&B by always starting from color
+    geometry_file = "/".join([target, 'temp_geometry.png'])
+    if os.path.isfile(geometry_file):
+        destination = geometry_file
+    else:
+        destination = "/".join([target, filename])
 
     img = Image.open(destination)
+
+    # IMPORTANT: Handle transparency before grayscale conversion
+    if img.mode == 'RGBA':
+        # Create white background for transparency
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[3])  # Use alpha channel as mask
+        img = background
+    elif img.mode == 'P':
+        img = img.convert('RGB')
 
     # convert to grayscale using Pillow's built-in method
     # This uses the standard luminosity formula: 0.299*R + 0.587*G + 0.114*B
     img = img.convert('L')
+
+    # IMPORTANT: Convert back to RGB for browser compatibility
+    # Some browsers have issues displaying grayscale PNG (mode 'L')
+    img = img.convert('RGB')
 
     # save and return image
     # Save as both temp.png and temp_no_rotation.png (base for future rotations)
@@ -252,6 +300,7 @@ def grayscale():
 
 
 # convert image to black and white (binary threshold)
+# ALWAYS use temp_geometry.png as source (preserves original colors + geometric transformations)
 @app.route("/blackwhite", methods=["POST"])
 def blackwhite():
     # retrieve parameters from html form
@@ -264,9 +313,25 @@ def blackwhite():
 
     # open and process image
     target = os.path.join(APP_ROOT, 'static/images')
-    destination = "/".join([target, filename])
+
+    # CRITICAL: Use temp_geometry.png if it exists (has original colors + geometric transforms)
+    # This ensures we can convert Gris → N&B by always starting from color
+    geometry_file = "/".join([target, 'temp_geometry.png'])
+    if os.path.isfile(geometry_file):
+        destination = geometry_file
+    else:
+        destination = "/".join([target, filename])
 
     img = Image.open(destination)
+
+    # IMPORTANT: Handle transparency before grayscale conversion
+    if img.mode == 'RGBA':
+        # Create white background for transparency
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[3])  # Use alpha channel as mask
+        img = background
+    elif img.mode == 'P':
+        img = img.convert('RGB')
 
     # convert to grayscale first
     img = img.convert('L')
@@ -274,8 +339,57 @@ def blackwhite():
     # apply binary threshold: pixels > threshold become white (255), others black (0)
     img = img.point(lambda pixel: 255 if pixel > threshold else 0)
 
+    # IMPORTANT: Convert back to RGB for browser compatibility
+    # Some browsers have issues displaying grayscale PNG (mode 'L')
+    img = img.convert('RGB')
+
     # save and return image
     # Save as both temp.png and temp_no_rotation.png (base for future rotations)
+    destination = "/".join([target, 'temp.png'])
+    destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+
+    if os.path.isfile(destination):
+        os.remove(destination)
+    if os.path.isfile(destination_no_rot):
+        os.remove(destination_no_rot)
+
+    img.save(destination)
+    img.save(destination_no_rot)
+
+    return send_image('temp.png')
+
+
+# restore original colors (use temp_geometry.png which has original colors + geometric transforms)
+@app.route("/restore-color", methods=["POST"])
+def restore_color():
+    # retrieve parameters from html form
+    filename = request.form['image']
+
+    # open and process image
+    target = os.path.join(APP_ROOT, 'static/images')
+
+    # CRITICAL: Use temp_geometry.png (has geometric transformations with original colors)
+    # If it doesn't exist, use the original filename
+    geometry_file = "/".join([target, 'temp_geometry.png'])
+    if os.path.isfile(geometry_file):
+        source = geometry_file
+    else:
+        source = "/".join([target, filename])
+
+    img = Image.open(source)
+
+    # IMPORTANT: Ensure image is in RGB mode for browser compatibility
+    # Convert RGBA → RGB, P → RGB, L → RGB, etc.
+    if img.mode == 'RGBA':
+        # Create white background for transparency
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[3])  # Use alpha channel as mask
+        img = background
+    elif img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    # save and return image (restore original colors)
+    # Save as both temp.png and temp_no_rotation.png
     destination = "/".join([target, 'temp.png'])
     destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
 

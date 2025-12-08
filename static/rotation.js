@@ -279,6 +279,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Handle color restoration with AJAX
+    function applyRestoreColor() {
+        loadingSpinner.classList.remove('hidden');
+
+        // Use temp.png if we already have transformations, otherwise use original
+        const baseImageName = hasTransformations ? 'temp.png' : imageName;
+
+        const formData = new FormData();
+        formData.append('image', baseImageName);
+
+        fetch('/restore-color', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            previewImage.src = imageUrl;
+            // Reset CSS transform since the restoration is now baked into the image
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            hasTransformations = true;
+            needsImageReload = true; // Mark that we need to reload base image for next rotation
+
+            // Reset rotation to 0 - restoration creates a new base
+            currentAngle = 0;
+            angleSlider.value = 0;
+            angleInput.value = 0;
+            currentAngleDisplay.textContent = 0;
+
+            loadingSpinner.classList.add('hidden');
+        })
+        .catch(error => {
+            console.error('Restore color error:', error);
+            loadingSpinner.classList.add('hidden');
+            alert('Erreur lors de la restauration de la couleur');
+        });
+    }
+
     // Event listeners for rotation synchronization
 
     // Slider input (real-time updates while dragging)
@@ -367,6 +405,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 applyGrayscale();
             } else if (mode === 'blackwhite') {
                 applyBlackWhite();
+            } else if (mode === 'color') {
+                applyRestoreColor();
             }
         });
     });
