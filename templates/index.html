@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
- 
+
 <head>
     <title>Python Flask Image Manipulation App</title>
- 
+
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
- 
+
     <link href="../static/jumbotron-narrow.css" rel="stylesheet">
 
     <link href="../static/style.css" rel="stylesheet">
- 
- 
+
+
 </head>
- 
+
 <body>
- 
+
     <div class="container">
         <div class="header">
             <nav>
@@ -27,41 +27,89 @@
             </nav>
             <h3 class="text-muted">Application de Manipulation d'Images</h3>
         </div>
- 
+
         <div class="jumbotron">
-            <h1>Téléchargez votre image</h1>
-            <p class="lead"></p>
+            <h1>Application de Transformation d'Images</h1>
+            <p class="lead">Transformez, fusionnez et téléchargez vos images en toute simplicité</p>
 	       <form id="upload-form" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
             <input id="file-picker" type="file" name="file" accept="image/*" class="hidden" onchange="this.form.submit()">
-            <label for="file-picker" class="btn btn-lg btn-success">Sélectionner un fichier</label>
+            <label for="file-picker" class="btn btn-lg btn-success">
+                <i class="glyphicon glyphicon-cloud-upload"></i> Sélectionner une image
+            </label>
+            <p style="margin-top: 15px; font-size: 14px; color: #777;">
+                Formats acceptés : JPG, PNG, BMP | Taille max recommandée : 5 Mo
+            </p>
 		 </form>
         </div>
- 
+
         <div class="row marketing">
-            <div class="col-lg-6">
-                <h4>Retourner</h4>
-                <p>Retournez votre image téléchargée horizontalement ou verticalement.</p>
- 
-                <h4>Rogner</h4>
-                <p>Sélectionnez vos points de début et de fin pour rogner votre image.</p> 
-                
-            </div>
- 
-            <div class="col-lg-6">
-                <h4>Pivoter</h4>
-                <p>Entrez l'angle (en degrés) pour faire pivoter votre image dans le sens horaire.</p>
- 
-                <h4>Fusionner</h4>
-                <p>Fusionnez avec une image fournie, en couleur ou en noir et blanc.</p>
-                
+            <div class="col-lg-12" style="text-align: center; margin-bottom: 30px;">
+                <h3 style="color: #5cb85c;">✨ Fonctionnalités disponibles</h3>
+                <p class="lead">Transformez vos images avec des outils puissants et intuitifs</p>
             </div>
         </div>
- 
+
+        <div class="row marketing">
+            <div class="col-lg-4">
+                <h4><span style="color: #5cb85c;">⚙️</span> Transformations géométriques</h4>
+
+                <h5>Retourner</h5>
+                <p>Retournez votre image horizontalement ou verticalement en un clic.</p>
+
+                <h5>Rogner</h5>
+                <p>Sélectionnez précisément vos coordonnées de début et de fin pour rogner votre image.</p>
+
+                <h5>Pivoter</h5>
+                <p>Faites pivoter votre image de 0° à 360° avec un slider interactif et une prévisualisation en temps réel.</p>
+            </div>
+
+            <div class="col-lg-4">
+                <h4><span style="color: #5bc0de;">🎨</span> Filtres et conversions</h4>
+
+                <h5>Niveaux de Gris</h5>
+                <p>Convertissez votre image en 256 nuances de gris avec la formule standard de luminosité.</p>
+
+                <h5>Noir & Blanc</h5>
+                <p>Appliquez un seuil binaire pour obtenir une image en noir et blanc pur (2 couleurs uniquement).</p>
+
+                <h5>Couleur Originale</h5>
+                <p>Revenez aux couleurs d'origine tout en conservant toutes les transformations géométriques appliquées.</p>
+            </div>
+
+            <div class="col-lg-4">
+                <h4><span style="color: #f0ad4e;">🖼️</span> Fusion d'images</h4>
+
+                <h5>Superposition avancée</h5>
+                <p>Importez une seconde image et superposez-la sur l'image principale avec un contrôle total.</p>
+
+                <h5>Contrôles disponibles</h5>
+                <p>• Position X/Y (0-100%)<br>
+                   • Échelle (10-200%)<br>
+                   • Opacité (0-100%)<br>
+                   • Prévisualisation en temps réel</p>
+
+                <h5>Cas d'usage</h5>
+                <p>Ajoutez un watermark, créez des collages, ou appliquez des effets de superposition artistiques.</p>
+            </div>
+        </div>
+
+        <div class="row marketing" style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 5px;">
+            <div class="col-lg-12" style="text-align: center;">
+                <h4 style="color: #337ab7;">🚀 Fonctionnalités avancées</h4>
+                <p>
+                    <strong>Chaînage des transformations :</strong> Appliquez plusieurs transformations successives (rotation + rognage + filtre + fusion).<br>
+                    <strong>Prévisualisation en temps réel :</strong> Visualisez instantanément toutes vos modifications avant de les appliquer.<br>
+                    <strong>Téléchargement optimisé :</strong> L'image finale capture toutes les transformations avec la meilleure qualité possible.<br>
+                    <strong>Formats supportés :</strong> JPG, PNG, BMP avec gestion automatique de la transparence.
+                </p>
+            </div>
+        </div>
+
         <footer class="footer">
-            <p class="text-center"> Transformation d'Images.</p>
+            <p class="text-center">🎨 Transformation d'Images - Powered by Flask & Pillow</p>
         </footer>
- 
+
     </div>
 </body>
- 
+
 </html>

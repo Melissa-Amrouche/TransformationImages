@@ -28,6 +28,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let hasTransformations = false; // Track if we have any transformations applied
     let needsImageReload = false; // Track if we need to reload the base image
 
+    // Overlay image state
+    let overlayImage = null;
+    let overlayX = 50; // Position X in percentage
+    let overlayY = 50; // Position Y in percentage
+    let overlayScale = 50; // Scale in percentage
+    let overlayOpacity = 100; // Opacity in percentage
+
     // Calculate scale factor to fit rotated image in container
     function calculateScaleForRotation(angle) {
         // No scaling - let the image rotate naturally
@@ -503,4 +510,211 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize with default value (0 degrees)
     needsImageReload = true; // First load needs the image
     updateRotation(0);
+
+    // ==================== OVERLAY IMAGE FUNCTIONALITY ====================
+
+    const overlayFilePicker = document.getElementById('overlay-file-picker');
+    const overlayControls = document.getElementById('overlay-controls');
+    const overlayXSlider = document.getElementById('overlay-x-slider');
+    const overlayYSlider = document.getElementById('overlay-y-slider');
+    const overlayScaleSlider = document.getElementById('overlay-scale-slider');
+    const overlayOpacitySlider = document.getElementById('overlay-opacity-slider');
+    const overlayXValue = document.getElementById('overlay-x-value');
+    const overlayYValue = document.getElementById('overlay-y-value');
+    const overlayScaleValue = document.getElementById('overlay-scale-value');
+    const overlayOpacityValue = document.getElementById('overlay-opacity-value');
+    const applyOverlayBtn = document.getElementById('apply-overlay-btn');
+    const removeOverlayBtn = document.getElementById('remove-overlay-btn');
+
+    // Handle overlay image upload
+    overlayFilePicker.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.match('image.*')) {
+            alert('Veuillez sélectionner une image valide (JPG, PNG)');
+            return;
+        }
+
+        // Load overlay image
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            overlayImage = new Image();
+            overlayImage.onload = function() {
+                // Show controls
+                overlayControls.classList.remove('hidden');
+                // Draw overlay on canvas
+                drawOverlay();
+            };
+            overlayImage.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Draw overlay on canvas with current settings
+    function drawOverlay() {
+        if (!overlayImage) return;
+
+        // Get the base image dimensions
+        const baseImg = previewImage;
+        const baseWidth = baseImg.naturalWidth;
+        const baseHeight = baseImg.naturalHeight;
+
+        // Calculate overlay dimensions based on scale
+        const overlayWidth = overlayImage.width * (overlayScale / 100);
+        const overlayHeight = overlayImage.height * (overlayScale / 100);
+
+        // Calculate position based on percentage
+        const x = (baseWidth * overlayX / 100) - (overlayWidth / 2);
+        const y = (baseHeight * overlayY / 100) - (overlayHeight / 2);
+
+        // Create temporary canvas for preview
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = baseWidth;
+        tempCanvas.height = baseHeight;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Draw base image
+        ctx.drawImage(baseImg, 0, 0, baseWidth, baseHeight);
+
+        // Set opacity and draw overlay
+        ctx.globalAlpha = overlayOpacity / 100;
+        ctx.drawImage(overlayImage, x, y, overlayWidth, overlayHeight);
+        ctx.globalAlpha = 1.0;
+
+        // Update preview image with overlay
+        previewImage.src = tempCanvas.toDataURL('image/png');
+    }
+
+    // Update overlay position X
+    overlayXSlider.addEventListener('input', function() {
+        overlayX = parseInt(this.value);
+        overlayXValue.textContent = overlayX;
+        drawOverlay();
+    });
+
+    // Update overlay position Y
+    overlayYSlider.addEventListener('input', function() {
+        overlayY = parseInt(this.value);
+        overlayYValue.textContent = overlayY;
+        drawOverlay();
+    });
+
+    // Update overlay scale
+    overlayScaleSlider.addEventListener('input', function() {
+        overlayScale = parseInt(this.value);
+        overlayScaleValue.textContent = overlayScale;
+        drawOverlay();
+    });
+
+    // Update overlay opacity
+    overlayOpacitySlider.addEventListener('input', function() {
+        overlayOpacity = parseInt(this.value);
+        overlayOpacityValue.textContent = overlayOpacity;
+        drawOverlay();
+    });
+
+    // Apply overlay permanently via server
+    applyOverlayBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        if (!overlayImage) {
+            alert('Aucune image de superposition chargée');
+            return;
+        }
+
+        loadingSpinner.classList.remove('hidden');
+
+        // Use temp.png if we have transformations, otherwise original
+        const baseImageName = hasTransformations ? 'temp.png' : imageName;
+
+        // Convert overlay image to base64
+        const overlayCanvas = document.createElement('canvas');
+        overlayCanvas.width = overlayImage.width;
+        overlayCanvas.height = overlayImage.height;
+        const overlayCtx = overlayCanvas.getContext('2d');
+        overlayCtx.drawImage(overlayImage, 0, 0);
+        const overlayBase64 = overlayCanvas.toDataURL('image/png').split(',')[1];
+
+        const formData = new FormData();
+        formData.append('image', baseImageName);
+        formData.append('overlay_data', overlayBase64);
+        formData.append('x_percent', overlayX);
+        formData.append('y_percent', overlayY);
+        formData.append('scale_percent', overlayScale);
+        formData.append('opacity_percent', overlayOpacity);
+
+        fetch('/overlay-blend', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Overlay blend failed');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            previewImage.src = imageUrl;
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            hasTransformations = true;
+            needsImageReload = true;
+
+            // Reset rotation
+            currentAngle = 0;
+            angleSlider.value = 0;
+            angleInput.value = 0;
+            currentAngleDisplay.textContent = 0;
+
+            // Hide overlay controls and reset
+            overlayControls.classList.add('hidden');
+            overlayImage = null;
+            overlayFilePicker.value = '';
+
+            loadingSpinner.classList.add('hidden');
+            alert('Fusion appliquée avec succès !');
+        })
+        .catch(error => {
+            console.error('Overlay blend error:', error);
+            loadingSpinner.classList.add('hidden');
+            alert('Erreur lors de la fusion des images');
+        });
+    });
+
+    // Remove overlay
+    removeOverlayBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        // Reset overlay state
+        overlayImage = null;
+        overlayX = 50;
+        overlayY = 50;
+        overlayScale = 50;
+        overlayOpacity = 100;
+
+        // Reset sliders
+        overlayXSlider.value = 50;
+        overlayYSlider.value = 50;
+        overlayScaleSlider.value = 50;
+        overlayOpacitySlider.value = 100;
+        overlayXValue.textContent = 50;
+        overlayYValue.textContent = 50;
+        overlayScaleValue.textContent = 50;
+        overlayOpacityValue.textContent = 100;
+
+        // Hide controls
+        overlayControls.classList.add('hidden');
+
+        // Reset file picker
+        overlayFilePicker.value = '';
+
+        // Restore original preview
+        if (hasTransformations) {
+            previewImage.src = '/static/images/temp.png?t=' + new Date().getTime();
+        } else {
+            previewImage.src = originalImage.src + '?t=' + new Date().getTime();
+        }
+    });
 });

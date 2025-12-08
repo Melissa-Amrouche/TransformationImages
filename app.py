@@ -404,6 +404,83 @@ def restore_color():
     return send_image('temp.png')
 
 
+# overlay blend - superpose a second image on top of the base image
+@app.route("/overlay-blend", methods=["POST"])
+def overlay_blend():
+    import base64
+    from io import BytesIO
+
+    # retrieve parameters from html form
+    filename = request.form['image']
+    overlay_base64 = request.form['overlay_data']
+    x_percent = float(request.form['x_percent'])
+    y_percent = float(request.form['y_percent'])
+    scale_percent = float(request.form['scale_percent'])
+    opacity_percent = float(request.form['opacity_percent'])
+
+    # open base image
+    target = os.path.join(APP_ROOT, 'static/images')
+    destination = "/".join([target, filename])
+    base_img = Image.open(destination)
+
+    # Ensure base image is RGB
+    if base_img.mode == 'RGBA':
+        background = Image.new('RGB', base_img.size, (255, 255, 255))
+        background.paste(base_img, mask=base_img.split()[3])
+        base_img = background
+    elif base_img.mode != 'RGB':
+        base_img = base_img.convert('RGB')
+
+    # decode overlay image from base64
+    overlay_data = base64.b64decode(overlay_base64)
+    overlay_img = Image.open(BytesIO(overlay_data))
+
+    # Ensure overlay image is RGBA for transparency support
+    if overlay_img.mode != 'RGBA':
+        overlay_img = overlay_img.convert('RGBA')
+
+    # Calculate overlay dimensions based on scale
+    base_width, base_height = base_img.size
+    overlay_width = int(overlay_img.width * (scale_percent / 100))
+    overlay_height = int(overlay_img.height * (scale_percent / 100))
+
+    # Resize overlay image
+    overlay_img = overlay_img.resize((overlay_width, overlay_height), Image.LANCZOS)
+
+    # Calculate position based on percentage (centered on the point)
+    x = int((base_width * x_percent / 100) - (overlay_width / 2))
+    y = int((base_height * y_percent / 100) - (overlay_height / 2))
+
+    # Apply opacity to overlay image (efficient method using alpha channel)
+    if overlay_img.mode == 'RGBA' and opacity_percent < 100:
+        # Extract alpha channel and multiply by opacity percentage
+        alpha = overlay_img.split()[3]
+        alpha = alpha.point(lambda p: int(p * (opacity_percent / 100)))
+        overlay_img.putalpha(alpha)
+
+    # Paste overlay on base image
+    base_img.paste(overlay_img, (x, y), overlay_img)
+
+    # save and return image
+    # Save as temp.png, temp_no_rotation.png, AND temp_geometry.png
+    destination = "/".join([target, 'temp.png'])
+    destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+    destination_geometry = "/".join([target, 'temp_geometry.png'])
+
+    if os.path.isfile(destination):
+        os.remove(destination)
+    if os.path.isfile(destination_no_rot):
+        os.remove(destination_no_rot)
+    if os.path.isfile(destination_geometry):
+        os.remove(destination_geometry)
+
+    base_img.save(destination)
+    base_img.save(destination_no_rot)
+    base_img.save(destination_geometry)  # Update geometry base with overlay
+
+    return send_image('temp.png')
+
+
 # retrieve file from 'static/images' directory
 @app.route('/static/images/<filename>')
 def send_image(filename):
