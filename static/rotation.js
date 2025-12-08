@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const formRotate = document.getElementById('form-rotate');
     const formFlip = document.getElementById('form-flip');
     const formCrop = document.getElementById('form-crop');
+    const formConvert = document.getElementById('form-convert');
 
     // Get the image filename from the hidden input
     const imageNameInput = document.querySelector('input[name="image"]');
@@ -201,6 +202,83 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Handle grayscale conversion with AJAX
+    function applyGrayscale() {
+        loadingSpinner.classList.remove('hidden');
+
+        // Use temp.png if we already have transformations, otherwise use original
+        const baseImageName = hasTransformations ? 'temp.png' : imageName;
+
+        const formData = new FormData();
+        formData.append('image', baseImageName);
+
+        fetch('/grayscale', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            previewImage.src = imageUrl;
+            // Reset CSS transform since the conversion is now baked into the image
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            hasTransformations = true;
+            needsImageReload = true; // Mark that we need to reload base image for next rotation
+
+            // Reset rotation to 0 - conversion creates a new base
+            currentAngle = 0;
+            angleSlider.value = 0;
+            angleInput.value = 0;
+            currentAngleDisplay.textContent = 0;
+
+            loadingSpinner.classList.add('hidden');
+        })
+        .catch(error => {
+            console.error('Grayscale error:', error);
+            loadingSpinner.classList.add('hidden');
+            alert('Erreur lors de la conversion en niveaux de gris');
+        });
+    }
+
+    // Handle black & white conversion with AJAX
+    function applyBlackWhite() {
+        loadingSpinner.classList.remove('hidden');
+
+        // Use temp.png if we already have transformations, otherwise use original
+        const baseImageName = hasTransformations ? 'temp.png' : imageName;
+
+        const formData = new FormData();
+        formData.append('image', baseImageName);
+        formData.append('threshold', 128); // Default threshold value
+
+        fetch('/blackwhite', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            previewImage.src = imageUrl;
+            // Reset CSS transform since the conversion is now baked into the image
+            previewImage.style.transform = 'rotate(0deg) scale(1)';
+            hasTransformations = true;
+            needsImageReload = true; // Mark that we need to reload base image for next rotation
+
+            // Reset rotation to 0 - conversion creates a new base
+            currentAngle = 0;
+            angleSlider.value = 0;
+            angleInput.value = 0;
+            currentAngleDisplay.textContent = 0;
+
+            loadingSpinner.classList.add('hidden');
+        })
+        .catch(error => {
+            console.error('Black & White error:', error);
+            loadingSpinner.classList.add('hidden');
+            alert('Erreur lors de la conversion en noir & blanc');
+        });
+    }
+
     // Event listeners for rotation synchronization
 
     // Slider input (real-time updates while dragging)
@@ -279,52 +357,79 @@ document.addEventListener('DOMContentLoaded', function() {
         applyCrop(x1, y1, x2, y2);
     });
 
+    // Handle conversion form with AJAX
+    const convertButtons = document.querySelectorAll('#form-convert button[type="submit"]');
+    convertButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const mode = this.value;
+            if (mode === 'grayscale') {
+                applyGrayscale();
+            } else if (mode === 'blackwhite') {
+                applyBlackWhite();
+            }
+        });
+    });
+
     // Download button functionality
     const downloadBtn = document.getElementById('download-btn');
     downloadBtn.addEventListener('click', function(e) {
         e.preventDefault();
 
-        // Get the current preview image source
-        const previewImageSrc = previewImage.src;
+        // Create a canvas to capture the image with all CSS transformations
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Create a temporary anchor element to trigger download
-        const link = document.createElement('a');
+        // Get the current angle and compute rotation in radians
+        const angleInRadians = (currentAngle * Math.PI) / 180;
 
-        // If the image is from a blob URL (after transformation)
-        if (previewImageSrc.startsWith('blob:')) {
-            fetch(previewImageSrc)
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    link.href = url;
-                    link.download = 'image_transformee_' + new Date().getTime() + '.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.error('Download error:', error);
-                    alert('Erreur lors du téléchargement de l\'image');
-                });
-        } else {
-            // If it's a regular URL (original image or temp.png)
-            fetch(previewImageSrc)
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    link.href = url;
-                    link.download = 'image_transformee_' + new Date().getTime() + '.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.error('Download error:', error);
-                    alert('Erreur lors du téléchargement de l\'image');
-                });
-        }
+        // Calculate the dimensions for the rotated canvas
+        const imgWidth = previewImage.naturalWidth;
+        const imgHeight = previewImage.naturalHeight;
+
+        // Calculate bounding box dimensions after rotation
+        const cos = Math.abs(Math.cos(angleInRadians));
+        const sin = Math.abs(Math.sin(angleInRadians));
+        const newWidth = Math.ceil(imgWidth * cos + imgHeight * sin);
+        const newHeight = Math.ceil(imgWidth * sin + imgHeight * cos);
+
+        // Set canvas size to fit the rotated image
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+
+        // Move to center of canvas and apply rotation
+        ctx.translate(newWidth / 2, newHeight / 2);
+        ctx.rotate(angleInRadians);
+
+        // Draw the image centered
+        ctx.drawImage(previewImage, -imgWidth / 2, -imgHeight / 2, imgWidth, imgHeight);
+
+        // Convert canvas to blob and trigger download
+        canvas.toBlob(function(blob) {
+            if (blob) {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+
+                // Format: image_modifiee_YYYYMMDD_HHmmss.png
+                const now = new Date();
+                const dateStr = now.getFullYear() +
+                    String(now.getMonth() + 1).padStart(2, '0') +
+                    String(now.getDate()).padStart(2, '0') +
+                    '_' +
+                    String(now.getHours()).padStart(2, '0') +
+                    String(now.getMinutes()).padStart(2, '0') +
+                    String(now.getSeconds()).padStart(2, '0');
+
+                link.href = url;
+                link.download = 'image_modifiee_' + dateStr + '.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } else {
+                alert('Erreur lors de la création de l\'image');
+            }
+        }, 'image/png');
     });
 
     // Reset all transformations button

@@ -219,6 +219,77 @@ def blend():
     return send_image('temp.png')
 
 
+# convert image to grayscale (256 shades of gray)
+@app.route("/grayscale", methods=["POST"])
+def grayscale():
+    # retrieve parameters from html form
+    filename = request.form['image']
+
+    # open and process image
+    target = os.path.join(APP_ROOT, 'static/images')
+    destination = "/".join([target, filename])
+
+    img = Image.open(destination)
+
+    # convert to grayscale using Pillow's built-in method
+    # This uses the standard luminosity formula: 0.299*R + 0.587*G + 0.114*B
+    img = img.convert('L')
+
+    # save and return image
+    # Save as both temp.png and temp_no_rotation.png (base for future rotations)
+    destination = "/".join([target, 'temp.png'])
+    destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+
+    if os.path.isfile(destination):
+        os.remove(destination)
+    if os.path.isfile(destination_no_rot):
+        os.remove(destination_no_rot)
+
+    img.save(destination)
+    img.save(destination_no_rot)
+
+    return send_image('temp.png')
+
+
+# convert image to black and white (binary threshold)
+@app.route("/blackwhite", methods=["POST"])
+def blackwhite():
+    # retrieve parameters from html form
+    filename = request.form['image']
+    threshold = int(request.form.get('threshold', 128))  # default threshold: 128
+
+    # validate threshold (0-255)
+    if not 0 <= threshold <= 255:
+        threshold = 128
+
+    # open and process image
+    target = os.path.join(APP_ROOT, 'static/images')
+    destination = "/".join([target, filename])
+
+    img = Image.open(destination)
+
+    # convert to grayscale first
+    img = img.convert('L')
+
+    # apply binary threshold: pixels > threshold become white (255), others black (0)
+    img = img.point(lambda pixel: 255 if pixel > threshold else 0)
+
+    # save and return image
+    # Save as both temp.png and temp_no_rotation.png (base for future rotations)
+    destination = "/".join([target, 'temp.png'])
+    destination_no_rot = "/".join([target, 'temp_no_rotation.png'])
+
+    if os.path.isfile(destination):
+        os.remove(destination)
+    if os.path.isfile(destination_no_rot):
+        os.remove(destination_no_rot)
+
+    img.save(destination)
+    img.save(destination_no_rot)
+
+    return send_image('temp.png')
+
+
 # retrieve file from 'static/images' directory
 @app.route('/static/images/<filename>')
 def send_image(filename):

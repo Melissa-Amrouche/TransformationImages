@@ -55,7 +55,7 @@
                     <input type="text" class="hidden" name="image" value="{{ image_name }}">
                 </form>
 
-              
+
                 <h4>Rogner</h4>
                 <form id="form-crop" action="{{ url_for('crop') }}" method="POST" enctype="multipart/form-data">
                     <input type="number" placeholder="x1" min="0" name="x1" required>
@@ -65,7 +65,18 @@
                     <button id="btnCrop" class="btn btn-lg btn-success" type="submit">Valider</button>
                     <input type="text" class="hidden" name="image" value="{{ image_name }}">
                 </form>
-                
+
+                <h4>Convertir</h4>
+                <form id="form-convert" action="{{ url_for('grayscale') }}" method="POST" enctype="multipart/form-data">
+                    <button id="btnGrayscale" class="btn btn-lg btn-info" type="submit" name="mode" value="grayscale">
+                        <i class="fa fa-adjust"></i> Niveaux de Gris
+                    </button>
+                    <button id="btnBlackWhite" class="btn btn-lg btn-info" type="submit" name="mode" value="blackwhite">
+                        <i class="fa fa-circle-half-stroke"></i> Noir & Blanc
+                    </button>
+                    <input type="text" class="hidden" name="image" value="{{ image_name }}">
+                </form>
+
             </div>
 
             <div class="col-lg-6">
